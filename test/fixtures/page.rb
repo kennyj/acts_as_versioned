@@ -1,4 +1,5 @@
 class Page < ActiveRecord::Base
+  validates_length_of :title, :maximum => 255
   belongs_to :author
   has_many   :authors,  :through => :versions, :order => 'name'
   belongs_to :revisor,  :class_name => 'Author'
@@ -10,7 +11,7 @@ class Page < ActiveRecord::Base
       base.belongs_to :author
       base.belongs_to :revisor, :class_name => 'Author'
     end
-    
+
     def feeling_good?
       @@feeling_good == true
     end
@@ -25,9 +26,9 @@ end
 
 class LockedPage < ActiveRecord::Base
   acts_as_versioned \
-    :inheritance_column => :version_type, 
-    :foreign_key        => :page_id, 
-    :table_name         => :locked_pages_revisions, 
+    :inheritance_column => :version_type,
+    :foreign_key        => :page_id,
+    :table_name         => :locked_pages_revisions,
     :class_name         => 'LockedPageRevision',
     :version_column     => :lock_version,
     :limit              => 2,

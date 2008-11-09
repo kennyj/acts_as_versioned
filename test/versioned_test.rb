@@ -34,6 +34,12 @@ class VersionedTest < Test::Unit::TestCase
     assert_equal old_versions, p.versions.count
   end
 
+  def test_saves_without_revision_with_error
+    p = pages(:welcome)
+    p.title = 'a' * 256
+    assert !p.save_without_revision
+  end
+
   def test_rollback_with_version_number
     p = pages(:welcome)
     assert_equal 24, p.version
@@ -132,6 +138,10 @@ class VersionedTest < Test::Unit::TestCase
       p2.title = 'stale title'
       p2.save
     end
+
+    # version_column is 'lock_version'
+    assert_nothing_raised { LockedPage::LockedPageRevision.before(p.versions(true).last) }
+    assert_nothing_raised { LockedPage::LockedPageRevision.after(p.versions(true).first) }
   end
 
   def test_version_if_condition
@@ -227,19 +237,19 @@ class VersionedTest < Test::Unit::TestCase
 
     p.body = 'whoa'
     assert !p.save_version?
-    p.save
+    assert p.save
     assert_equal 2, p.lock_version # still increments version because of optimistic locking
     assert_equal 1, p.versions(true).size
 
     p.title = 'updated title'
     assert p.save_version?
-    p.save
+    assert p.save
     assert_equal 3, p.lock_version
     assert_equal 1, p.versions(true).size # version 1 deleted
 
     p.title = 'updated title!'
     assert p.save_version?
-    p.save
+    assert p.save
     assert_equal 4, p.lock_version
     assert_equal 2, p.versions(true).size # version 1 deleted
   end
